@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fertility Window Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --primary-hover-color: #ff5252;
+            --secondary-color: #4a4a4a;
+            --background-color: #fdf7f7;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --light-text-color: #666;
+            --border-color: #eee;
+        }
+
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+
+        /* Header styles */
+        .header {
+            background-color: var(--card-background);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--secondary-color);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Hero section */
+        .hero-section {
+            padding: 10rem 2rem 6rem;
+            background: linear-gradient(135deg, #ff8e8e 0%, #ffc1c1 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .cta-button {
+            background-color: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-top: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        /* Tracker section */
+        .tracker-section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tracker-section h2 {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--secondary-color);
+            font-size: 2.5rem;
+        }
+
+        .tracker-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3rem;
+        }
+        
+        .input-form h3, .results-container h3 {
+            font-size: 1.8rem;
+            color: var(--secondary-color);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .cycles-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .cycle-input {
+            background-color: var(--card-background);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s ease;
+        }
+        .cycle-input:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .cycle-input h4 {
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--light-text-color);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s ease;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .submit-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .submit-button:hover {
+            background-color: var(--primary-hover-color);
+            transform: translateY(-2px);
+        }
+        .submit-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Results container */
+        .results-container .placeholder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            min-height: 400px;
+            text-align: center;
+            color: var(--light-text-color);
+            font-size: 1.1rem;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .results-container .placeholder i {
+            font-size: 3rem;
+            color: #ddd;
+        }
+        
+        #resultsContent { display: none; }
+        
+        .result-card {
+            background-color: var(--card-background);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .result-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Calendar */
+        #calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+        #calendar .day-name { font-weight: 600; font-size: 0.8rem; color: var(--light-text-color); }
+        #calendar .day {
+            padding: 0.5em;
+            border-radius: 50%;
+            cursor: default;
+            position: relative;
+        }
+        #calendar .day.fertile { background-color: #ffe0e0; }
+        #calendar .day.ovulation { background-color: var(--primary-color); color: white; font-weight: bold; }
+        #calendar .day.other-month { color: #ccc; }
+        #calendar .day.today { font-weight: bold; border: 2px solid var(--primary-color); }
+
+        /* Conception Probability */
+        #conceptionProbability ul {
+            list-style: none;
+            padding: 0;
+        }
+        #conceptionProbability li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        #conceptionProbability .date { width: 100px; font-size: 0.9rem; }
+        #conceptionProbability .bar-container { flex-grow: 1; background-color: #f0f0f0; border-radius: 5px; }
+        #conceptionProbability .bar {
+            height: 20px;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+            text-align: right;
+            padding-right: 5px;
+            color: white;
+            font-size: 0.8rem;
+            line-height: 20px;
+        }
+        
+        #cycleRegularity {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Insights section */
+        .insights-section {
+            padding: 4rem 2rem;
+            background-color: #fff;
+        }
+
+        .insights-section h2 {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+        }
+
+        .insights-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .insight-card {
+            background-color: var(--background-color);
+            padding: 2rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .insight-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        .insight-card ul {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+
+        /* Footer styles */
+        .footer {
+            background-color: #333;
+            color: white;
+            padding: 4rem 2rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .tracker-container {
+                grid-template-columns: 1fr;
+            }
+
+            .cycles-container {
+                grid-template-columns: 1fr;
+            }
+
+            .insights-container {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        } 
+        
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .bbt-input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        .bbt-input-container textarea {
+            flex-grow: 1;
+        }
+        .bbt-input-container select {
+            width: auto;
+            flex-shrink: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">Fertility Window</div>
+            
+        </nav>
+    </header>
+
+    <main>
+        <section id="tracker" class="tracker-section">
+            <div class="tracker-container">
+                <div class="input-form">
+                    <h3>Enter Your Cycle Data</h3>
+                    <form id="fertilityForm">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="Name" required>
+                        </div>
+                        <div class="cycles-container">
+                            <!-- Cycle 1 -->
+                            <div class="cycle-input">
+                                <h4>Cycle 1</h4>
+                                <div class="form-group">
+                                    <label for="lmpDate1">Last Menstrual Period (LMP)</label>
+                                    <input type="date" id="lmpDate1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cycleLength1">Cycle Length (days)</label>
+                                    <input type="number" id="cycleLength1" min="21" max="45" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="periodDuration1">Period Duration (days)</label>
+                                    <input type="number" id="periodDuration1" min="2" max="8" required>
+                                </div>
+                            </div>
+                            <!-- Cycle 2 -->
+                            <div class="cycle-input">
+                                <h4>Cycle 2</h4>
+                                <div class="form-group">
+                                    <label for="lmpDate2">Last Menstrual Period (LMP)</label>
+                                    <input type="date" id="lmpDate2" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cycleLength2">Cycle Length (days)</label>
+                                    <input type="number" id="cycleLength2" min="21" max="45" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="periodDuration2">Period Duration (days)</label>
+                                    <input type="number" id="periodDuration2" min="2" max="8" required>
+                                </div>
+                            </div>
+                            <!-- Cycle 3 -->
+                            <div class="cycle-input">
+                                <h4>Cycle 3  (Most Recent)</h4>
+                                <div class="form-group">
+                                    <label for="lmpDate3">Last Menstrual Period (LMP)</label>
+                                    <input type="date" id="lmpDate3" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cycleLength3">Cycle Length (days)</label>
+                                    <input type="number" id="cycleLength3" min="21" max="45" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="periodDuration3">Period Duration (days)</label>
+                                    <input type="number" id="periodDuration3" min="2" max="8" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background-color: #fff; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">Additional Factors</h4>
+                            <div class="form-group" id="pcosSelect">
+                                <label for="pcos">Do you have PCOS?</label>
+                                <select id="pcos" required>
+                                    <option value="false" selected>False</option>
+                                    <option value="true">True</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="bbtFormGroup" style="display: none;">
+                                <label for="bbtData">Daily BBT Data(°C)</label>
+                                <textarea id="bbtData" rows="3" placeholder="e.g., 36.2, 36.4, ..."></textarea>
+                            </div>
+                            <div class="form-group" id="fileUploadGroup" style="display: none;">
+                                <label for="bbtFile" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--primary-color); font-size: 1.1rem;">
+                                    <i class="fas fa-file-excel" style="font-size: 1.5rem;"></i>
+                                    Upload BBT Data (Excel or CSV)
+                                </label>
+                                <div class="custom-file-upload" style="position: relative; display: flex; align-items: center; gap: 1rem;">
+                                    <input type="file" id="bbtFile" accept=".xlsx, .xls, .csv" style="opacity: 0; position: absolute; left: 0; top: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2;">
+                                    <button type="button" id="bbtFileButton" style="background: var(--primary-color); color: #fff; border: none; border-radius: 6px; padding: 0.6rem 1.2rem; font-size: 1rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="fas fa-upload"></i> Choose File
+                                    </button>
+                                    <span id="bbtFileName" style="font-size: 0.95rem; color: var(--light-text-color);">No file chosen</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-button">
+                            <i class="fas fa-magic"></i>
+                            <span>Calculate Next Cycle</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="results-container">
+                    <h3>Your Next Cycle Prediction</h3>
+                    <div id="resultsPlaceholder" class="placeholder">
+                        <i class="fas fa-chart-line"></i>
+                        <p>Your personalized predictions will appear here once you enter your cycle data.</p>
+                    </div>
+
+                    <div id="resultsContent">
+                        <div class="result-card">
+                            <h4><i class="fas fa-calendar-alt"></i>Fertile Window & Ovulation</h4>
+                            <div id="calendarHeader" style="text-align: center; font-weight: bold; margin-bottom: 1rem;"></div>
+                            <div id="calendar"></div>
+                        </div>
+                        <div class="result-card">
+                            <h4><i class="fas fa-chart-pie"></i>Conception Probability per Day</h4>
+                            <div id="conceptionProbability">Enter your data to see predictions</div>
+                        </div>
+                        <div class="result-card">
+                            <h4><i class="fas fa-sync-alt"></i>Cycle Regularity</h4>
+                            <p id="cycleRegularity">Enter your data to see analysis</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer footer-bottom">
+            <p>&copy; 2025 Fertility Window. All rights reserved.</p>
+    </footer>
+
+    <script>
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const fertilityForm = document.getElementById('fertilityForm');
+            const resultsPlaceholder = document.getElementById('resultsPlaceholder');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            const cycleRegularityElement = document.getElementById('cycleRegularity');
+            const conceptionProbabilityElement = document.getElementById('conceptionProbability');
+            const cycleAnalysisElement = document.getElementById('cycleAnalysis');
+            const recommendationsElement = document.getElementById('recommendations');
+            const submitButton = fertilityForm.querySelector('.submit-button');
+            const submitButtonSpan = submitButton.querySelector('span');
+
+            const pcosSelect = document.getElementById('pcos');
+            const bbtFormGroup = document.getElementById('bbtFormGroup');
+            const fileUploadGroup = document.getElementById('fileUploadGroup');
+            const bbtFileInput = document.getElementById('bbtFile');
+            const bbtFileButton = document.getElementById('bbtFileButton');
+            const bbtFileName = document.getElementById('bbtFileName');
+
+            pcosSelect.addEventListener('change', function() {
+                const isPcos = this.value === 'true';
+                bbtFormGroup.style.display = isPcos ? 'block' : 'none';
+                fileUploadGroup.style.display = isPcos ? 'block' : 'none';
+            });
+
+            fertilityForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Disable button and show loading text/spinner
+                submitButton.disabled = true;
+                submitButtonSpan.textContent = 'Calculating...';
+                const loader = document.createElement('div');
+                loader.className = 'loader';
+                submitButton.prepend(loader);
+
+
+                // Gather form data using FormData for file upload
+                const formData = new FormData();
+                formData.append('name', document.getElementById('Name').value);
+                formData.append('lmpDate1', document.getElementById('lmpDate1').value);
+                formData.append('cycleLength1', document.getElementById('cycleLength1').value);
+                formData.append('periodDuration1', document.getElementById('periodDuration1').value);
+                formData.append('lmpDate2', document.getElementById('lmpDate2').value);
+                formData.append('cycleLength2', document.getElementById('cycleLength2').value);
+                formData.append('periodDuration2', document.getElementById('periodDuration2').value);
+                formData.append('lmpDate3', document.getElementById('lmpDate3').value);
+                formData.append('cycleLength3', document.getElementById('cycleLength3').value);
+                formData.append('periodDuration3', document.getElementById('periodDuration3').value);
+                formData.append('pcos', document.getElementById('pcos').value);
+                formData.append('bbtData', document.getElementById('bbtData').value);
+                
+                const bbtFile = document.getElementById('bbtFile').files[0];
+                if (bbtFile) {
+                    formData.append('bbtFile', bbtFile);
+                }
+
+                // Send data to Python backend
+                fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    body: formData, // No Content-Type header needed; browser sets it for FormData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Re-enable button
+                    submitButton.disabled = false;
+                    submitButtonSpan.textContent = 'Calculate Next Cycle';
+                    submitButton.querySelector('.loader').remove();
+                    
+                    resultsPlaceholder.style.display = 'none';
+                    resultsContent.style.display = 'block';
+
+                    // Update UI with data from backend
+                    displayResults(data);
+                    updateInsights(data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    // Re-enable button and show error
+                    submitButton.disabled = false;
+                    submitButtonSpan.textContent = 'Calculate Next Cycle';
+                    if(submitButton.querySelector('.loader')) {
+                        submitButton.querySelector('.loader').remove();
+                    }
+                });
+            });
+
+            function displayResults(data) {
+                generateCalendar(data);
+                cycleRegularityElement.textContent = data.cycleRegularity;
+
+                let probabilityHTML = '<ul>';
+                data.conceptionProbability.forEach(item => {
+                    const percentage = parseFloat(item.probability.replace('%', ''));
+                    probabilityHTML += `
+                        <li>
+                            <div class="date">${item.date}</div>
+                            <div class="bar-container">
+                                <div class="bar" style="width: ${percentage}%;">${item.probability}</div>
+                            </div>
+                        </li>`;
+                });
+                probabilityHTML += '</ul>';
+                conceptionProbabilityElement.innerHTML = probabilityHTML;
+            }
+
+            function generateCalendar(data) {
+                const calendarEl = document.getElementById('calendar');
+                const calendarHeaderEl = document.getElementById('calendarHeader');
+                calendarEl.innerHTML = '';
+
+                const fertileStart = new Date(data.fertileWindow.start.replace(/-/g, '/'));
+                const fertileEnd = new Date(data.fertileWindow.end.replace(/-/g, '/'));
+                const ovulationDay = new Date(data.ovulationDay.replace(/-/g, '/'));
+                
+                const today = new Date();
+                today.setHours(0,0,0,0);
+
+                const displayMonth = fertileStart.getMonth();
+                const displayYear = fertileStart.getFullYear();
+                
+                calendarHeaderEl.textContent = new Date(displayYear, displayMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+                const firstDayOfMonth = new Date(displayYear, displayMonth, 1);
+                const lastDayOfMonth = new Date(displayYear, displayMonth + 1, 0);
+
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                dayNames.forEach(name => {
+                    const dayNameEl = document.createElement('div');
+                    dayNameEl.className = 'day-name';
+                    dayNameEl.textContent = name;
+                    calendarEl.appendChild(dayNameEl);
+                });
+
+                for (let i = 0; i < firstDayOfMonth.getDay(); i++) {
+                    const emptyEl = document.createElement('div');
+                    calendarEl.appendChild(emptyEl);
+                }
+
+                for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+                    const dayEl = document.createElement('div');
+                    const currentDate = new Date(displayYear, displayMonth, i);
+                    dayEl.className = 'day';
+                    dayEl.textContent = i;
+                    
+                    if (currentDate >= fertileStart && currentDate <= fertileEnd) {
+                        dayEl.classList.add('fertile');
+                    }
+                    if (currentDate.getTime() === ovulationDay.getTime()) {
+                        dayEl.classList.add('ovulation');
+                        dayEl.title = 'Estimated Ovulation';
+                    }
+                    if (currentDate.getTime() === today.getTime()) {
+                        dayEl.classList.add('today');
+                    }
+                    
+                    calendarEl.appendChild(dayEl);
+                }
+            }
+
+
+            function updateInsights(data) {
+                const insights = data.insights;
+                const bbtDataString = document.getElementById('bbtData').value;
+
+                const bbtData = bbtDataString.split(',').map(t => parseFloat(t.trim())).filter(t => !isNaN(t));
+                if (bbtData.length > 0) {
+                    const avgBBT = bbtData.reduce((a, b) => a + b, 0) / bbtData.length;
+                    analysis += `<p>Your average BBT from the data provided is <strong>${avgBBT.toFixed(2)}°C</strong>. Look for a sustained rise of at least 0.3°C to confirm ovulation.</p>`;
+                }
+
+                cycleAnalysisElement.innerHTML = analysis;
+                recommendationsElement.innerHTML = recommendations;
+            }
+            
+            // Smooth scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+
+            document.querySelector('.cta-button').addEventListener('click', function() {
+                document.querySelector('#tracker').scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // Custom file upload button logic
+            if (bbtFileButton && bbtFileInput) {
+                bbtFileButton.addEventListener('click', function() {
+                    bbtFileInput.click();
+                });
+                bbtFileInput.addEventListener('change', function() {
+                    bbtFileName.textContent = bbtFileInput.files.length > 0 ? bbtFileInput.files[0].name : 'No file chosen';
+                });
+            }
+        }); 
+    </script>
+</body>
+</html> 
