@@ -93,24 +93,7 @@
             text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
         }
 
-        .cta-button {
-            background-color: white;
-            color: var(--primary-color);
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            margin-top: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
 
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
 
         /* Tracker section */
         .tracker-section {
@@ -445,7 +428,9 @@
     <header class="header">
         <nav class="nav-container">
             <div class="logo">Fertility Window</div>
-            
+            <button type="button" id="reloadButton" style="background: #4a4a4a; color: #fff; border: none; border-radius: 6px; padding: 0.6rem 1.2rem; font-size: 1rem; font-weight: 500; cursor: pointer;">
+                <i class="fas fa-user-plus"></i> New Person
+            </button>
         </nav>
     </header>
 
@@ -453,11 +438,18 @@
         <section id="tracker" class="tracker-section">
             <div class="tracker-container">
                 <div class="input-form">
-                    <h3>Enter Your Cycle Data</h3>
+                    <h3>Enter Patient Data</h3>
                     <form id="fertilityForm">
                         <div class="form-group">
                             <label for="name">Name</label>
                             <input type="text" id="Name" required>
+                        </div>
+                        <div class="custom-file-upload" style="position: relative; display: flex; align-items: center; gap: 1rem;">
+                            <input type="file" id="bbtFile_data" accept=".xlsx, .xls, .csv" style="opacity: 0; position: absolute; left: 0; top: 0; width: 100%; height: 100%; cursor: pointer; z-index: 2;">
+                            <button type="button" id="bbtFileButton_data" style="background: var(--primary-color); color: #fff; border: none; border-radius: 6px; padding: 0.6rem 1.2rem; font-size: 1rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-upload"></i> Choose File
+                            </button>
+                            <span id="bbtFileName_data" style="font-size: 0.95rem; color: var(--light-text-color);">No file chosen</span>
                         </div>
                         <div class="cycles-container">
                             <!-- Cycle 1 -->
@@ -544,10 +536,11 @@
                             <span>Calculate Next Cycle</span>
                         </button>
                     </form>
+                    
                 </div>
 
                 <div class="results-container">
-                    <h3>Your Next Cycle Prediction</h3>
+                    <h3>Patient's Next Cycle Prediction</h3>
                     <div id="resultsPlaceholder" class="placeholder">
                         <i class="fas fa-chart-line"></i>
                         <p>Your personalized predictions will appear here once you enter your cycle data.</p>
@@ -587,8 +580,6 @@
             
             const cycleRegularityElement = document.getElementById('cycleRegularity');
             const conceptionProbabilityElement = document.getElementById('conceptionProbability');
-            const cycleAnalysisElement = document.getElementById('cycleAnalysis');
-            const recommendationsElement = document.getElementById('recommendations');
             const submitButton = fertilityForm.querySelector('.submit-button');
             const submitButtonSpan = submitButton.querySelector('span');
 
@@ -599,6 +590,127 @@
             const bbtFileButton = document.getElementById('bbtFileButton');
             const bbtFileName = document.getElementById('bbtFileName');
 
+            const bbtFileInput_data = document.getElementById('bbtFile_data');
+            const bbtFileButton_data = document.getElementById('bbtFileButton_data');
+            const bbtFileName_data = document.getElementById('bbtFileName_data');
+
+            if (bbtFileButton_data && bbtFileInput_data) {
+                bbtFileButton_data.addEventListener('click', function() {
+                    bbtFileInput_data.click();
+                });
+                bbtFileInput_data.addEventListener('change', function() {
+                    bbtFileName_data.textContent = bbtFileInput_data.files.length > 0 ? bbtFileInput_data.files[0].name : 'No file chosen';
+                    // When a file is chosen, send only name and file to /receive_data
+                    const file1 = bbtFileInput_data.files[0];
+                    const name1 = document.getElementById('Name').value;
+                    if (file1 && name1) {
+                        const formData1 = new FormData();
+                        formData1.append('name', name1);
+                        formData1.append('bbtFile_data', file1);
+                        fetch('http://127.0.0.1:5000/receive_data', {
+                            method: 'POST',
+                            body: formData1,
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Only display results if prediction data is present
+                            if (data.fertileWindow) {
+                                displayResults(data);
+                                updateInsights(data);
+                            }
+
+                            // Autofill and disable fields only if response is successful
+                            if (data.success) {
+                                const responseToInputId = {
+                                    LMP_Cycle_1: 'lmpDate1',
+                                    LMP_Cycle_2: 'lmpDate2',
+                                    LMP_Cycle_3: 'lmpDate3',
+                                    Cycle_Length_1: 'cycleLength1',
+                                    Cycle_Length_2: 'cycleLength2',
+                                    Cycle_Length_3: 'cycleLength3',
+                                    Period_Duration_1: 'periodDuration1',
+                                    Period_Duration_2: 'periodDuration2',
+                                    Period_Duration_3: 'periodDuration3',
+                                    is_pcos: 'pcos'
+                                };
+
+                                for (const [key, inputId] of Object.entries(responseToInputId)) {
+                                    if (data[key] !== undefined && data[key] !== null) {
+                                        const input = document.getElementById(inputId);
+                                        if (input) {
+                                            // LMP fields (date)
+                                            if (input.type === 'date') {
+                                                let dateValue = data[key];
+                                                if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+                                                    const parsed = new Date(dateValue);
+                                                    if (!isNaN(parsed)) {
+                                                        const yyyy = parsed.getFullYear();
+                                                        const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+                                                        const dd = String(parsed.getDate()).padStart(2, '0');
+                                                        dateValue = `${yyyy}-${mm}-${dd}`;
+                                                    }
+                                                }
+                                                input.value = dateValue;
+                                            }
+                                            // Cycle and Period fields (number)
+                                            else if (input.type === 'number') {
+                                                input.value = Number(data[key]);
+                                            }
+                                            // is_pcos (select or checkbox)
+                                            else if (inputId === 'pcos') {
+                                                input.value = (data[key].toString().toLowerCase() === 'true') ? 'true' : 'false';
+                                                // Trigger the change event so the UI updates
+                                                input.dispatchEvent(new Event('change'));
+                                            }
+                                            // Fallback for other types
+                                            else {
+                                                input.value = data[key];
+                                            }
+                                            // Disable the input so it cannot be edited
+                                            input.disabled = true;
+                                        }
+                                    }
+                                }
+                            }
+                            else{
+                                // Display a modal dialog to inform the user
+                                let modal = document.getElementById('customModal');
+                                if (!modal) {
+                                    modal = document.createElement('div');
+                                    modal.id = 'customModal';
+                                    modal.innerHTML = `
+                                        <div id="customModalOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+                                            <div style="background: #fff; padding: 2rem 2.5rem; border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); max-width: 90vw; max-height: 80vh; text-align: center; position: relative;">
+                                                <span id="closeCustomModal" style="position: absolute; top: 10px; right: 18px; font-size: 1.5rem; color: #ff6b6b; cursor: pointer;">&times;</span>
+                                                <h2 style="margin-bottom: 1rem; color: #ff6b6b;">Notification</h2>
+                                                <p style="font-size: 1.1rem; color: #333;">There is currently no data in the learning dataset. Please enter the data manually.</p>
+                                            </div>
+                                        </div>
+                                    `;
+                                    document.body.appendChild(modal);
+                                    // Close modal on click
+                                    document.getElementById('closeCustomModal').onclick = function() {
+                                        modal.style.display = 'none';
+                                    };
+                                    // Also close modal if overlay is clicked (but not the modal content)
+                                    document.getElementById('customModalOverlay').onclick = function(e) {
+                                        if (e.target === this) {
+                                            modal.style.display = 'none';
+                                        }
+                                    };
+                                } else {
+                                    modal.style.display = 'block';
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('File upload error:', error);
+                        });
+                    }
+                });
+            }
+        
+            
             pcosSelect.addEventListener('change', function() {
                 const isPcos = this.value === 'true';
                 bbtFormGroup.style.display = isPcos ? 'block' : 'none';
@@ -615,7 +727,6 @@
                 loader.className = 'loader';
                 submitButton.prepend(loader);
 
-
                 // Gather form data using FormData for file upload
                 const formData = new FormData();
                 formData.append('name', document.getElementById('Name').value);
@@ -630,13 +741,14 @@
                 formData.append('periodDuration3', document.getElementById('periodDuration3').value);
                 formData.append('pcos', document.getElementById('pcos').value);
                 formData.append('bbtData', document.getElementById('bbtData').value);
-                
-                const bbtFile = document.getElementById('bbtFile').files[0];
+                console.log(formData);
+                // Use the new file input for file upload
+                const bbtFile = document.getElementById('bbtFile_data').files[0];
                 if (bbtFile) {
                     formData.append('bbtFile', bbtFile);
                 }
 
-                // Send data to Python backend
+                // Send data to Python backend at /predict
                 fetch('http://127.0.0.1:5000/predict', {
                     method: 'POST',
                     body: formData, // No Content-Type header needed; browser sets it for FormData
@@ -654,6 +766,9 @@
                     // Update UI with data from backend
                     displayResults(data);
                     updateInsights(data);
+
+                    // Autofill and disable fields only if response is successful
+                    
                 })
                 .catch((error) => {
                     console.error('Error:', error);
@@ -739,7 +854,6 @@
                 }
             }
 
-
             function updateInsights(data) {
                 const insights = data.insights;
                 const bbtDataString = document.getElementById('bbtData').value;
@@ -750,8 +864,6 @@
                     analysis += `<p>Your average BBT from the data provided is <strong>${avgBBT.toFixed(2)}°C</strong>. Look for a sustained rise of at least 0.3°C to confirm ovulation.</p>`;
                 }
 
-                cycleAnalysisElement.innerHTML = analysis;
-                recommendationsElement.innerHTML = recommendations;
             }
             
             // Smooth scrolling
@@ -760,10 +872,6 @@
                     e.preventDefault();
                     document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
                 });
-            });
-
-            document.querySelector('.cta-button').addEventListener('click', function() {
-                document.querySelector('#tracker').scrollIntoView({ behavior: 'smooth' });
             });
 
             // Custom file upload button logic
@@ -775,6 +883,10 @@
                     bbtFileName.textContent = bbtFileInput.files.length > 0 ? bbtFileInput.files[0].name : 'No file chosen';
                 });
             }
+
+            document.getElementById('reloadButton').addEventListener('click', function() {
+                window.location.reload();
+            });
         }); 
     </script>
 </body>
