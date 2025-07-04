@@ -808,18 +808,35 @@
                 const fertileStart = new Date(data.fertileWindow.start.replace(/-/g, '/'));
                 const fertileEnd = new Date(data.fertileWindow.end.replace(/-/g, '/'));
                 const ovulationDay = new Date(data.ovulationDay.replace(/-/g, '/'));
-                
                 const today = new Date();
                 today.setHours(0,0,0,0);
 
+                // Determine if we need to show next month
                 const displayMonth = fertileStart.getMonth();
                 const displayYear = fertileStart.getFullYear();
-                
-                calendarHeaderEl.textContent = new Date(displayYear, displayMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                const nextMonth = (displayMonth + 1) % 12;
+                const nextMonthYear = displayMonth === 11 ? displayYear + 1 : displayYear;
 
-                const firstDayOfMonth = new Date(displayYear, displayMonth, 1);
-                const lastDayOfMonth = new Date(displayYear, displayMonth + 1, 0);
+                // Find the last day to display
+                let lastDisplayDate = new Date(displayYear, displayMonth + 1, 0); // end of current month
+                if (fertileEnd.getMonth() !== displayMonth || ovulationDay.getMonth() !== displayMonth) {
+                    // If fertileEnd or ovulationDay is in next month, show at least up to the 7th of next month or the last relevant day
+                    const lastRelevant = new Date(Math.max(fertileEnd, ovulationDay));
+                    const firstWeekNextMonth = new Date(nextMonthYear, nextMonth, 7);
+                    lastDisplayDate = lastRelevant > firstWeekNextMonth ? lastRelevant : firstWeekNextMonth;
+                }
 
+                // Header: show both months if needed
+                if (lastDisplayDate.getMonth() !== displayMonth) {
+                    calendarHeaderEl.textContent = 
+                        new Date(displayYear, displayMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) +
+                        ' / ' +
+                        new Date(nextMonthYear, nextMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                } else {
+                    calendarHeaderEl.textContent = new Date(displayYear, displayMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                }
+
+                // Day names
                 const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 dayNames.forEach(name => {
                     const dayNameEl = document.createElement('div');
@@ -828,17 +845,25 @@
                     calendarEl.appendChild(dayNameEl);
                 });
 
+                // Empty cells for first day of first month
+                const firstDayOfMonth = new Date(displayYear, displayMonth, 1);
                 for (let i = 0; i < firstDayOfMonth.getDay(); i++) {
                     const emptyEl = document.createElement('div');
                     calendarEl.appendChild(emptyEl);
                 }
 
-                for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+                // Render days from start of first month to lastDisplayDate
+                let currentDate = new Date(displayYear, displayMonth, 1);
+                while (currentDate <= lastDisplayDate) {
                     const dayEl = document.createElement('div');
-                    const currentDate = new Date(displayYear, displayMonth, i);
                     dayEl.className = 'day';
-                    dayEl.textContent = i;
-                    
+                    dayEl.textContent = currentDate.getDate();
+
+                    // Mark other month days
+                    if (currentDate.getMonth() !== displayMonth) {
+                        dayEl.classList.add('other-month');
+                    }
+
                     if (currentDate >= fertileStart && currentDate <= fertileEnd) {
                         dayEl.classList.add('fertile');
                     }
@@ -849,8 +874,9 @@
                     if (currentDate.getTime() === today.getTime()) {
                         dayEl.classList.add('today');
                     }
-                    
+
                     calendarEl.appendChild(dayEl);
+                    currentDate.setDate(currentDate.getDate() + 1);
                 }
             }
 
